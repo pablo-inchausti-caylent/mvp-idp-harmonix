@@ -43,6 +43,13 @@ async function main() {
     env,
   });
 
+  // Add global tags to all resources
+cdk.Tags.of(app).add('caylent:project', 'sequoia-ia-harmonix-mvp');
+  cdk.Tags.of(app).add('caylent:owner', 'pablo.inchausti@caylent.com');
+  cdk.Tags.of(app).add('environment', 'dev');
+  cdk.Tags.of(app).add('date', '2025-11');
+  cdk.Tags.of(app).add('resources-group-id', 'god-v20251114-v1.0.0');
+  cdk.Tags.of(app).add('map-tag', 'mig-Sequoia-TBD');
 
   app.synth();
 }
