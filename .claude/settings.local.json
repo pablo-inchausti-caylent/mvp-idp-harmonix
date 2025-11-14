@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(aws secretsmanager get-secret-value:*)",
+      "Bash(aws secretsmanager list-secrets:*)",
+      "Bash(python3:*)",
+      "Bash(aws ssm get-parameters-by-path:*)",
+      "Bash(aws ec2 describe-instances:*)",
+      "Bash(aws ec2 get-console-output:*)",
+      "Bash(aws ssm start-session:*)",
+      "Bash(aws cloudformation describe-stacks:*)",
+      "Bash(aws ec2 describe-instance-status:*)",
+      "Bash(aws secretsmanager create-secret:*)",
+      "Bash(aws logs tail:*)",
+      "Bash(curl:*)",
+      "Bash(aws logs describe-log-groups:*)",
+      "Bash(make build-backstage:*)",
+      "Bash(tee:*)",
+      "Bash(aws ecs describe-tasks:*)",
+      "Bash(aws ecs describe-services:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
