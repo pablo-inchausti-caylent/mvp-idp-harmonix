@@ -141,6 +141,10 @@ lerna-debug.log*
 !environment/.environment-shared.json
 
 /backstage
+# Exception: Allow logo customization files to be committed
+!/backstage/packages/app/src/components/Root/LogoFull.tsx
+!/backstage/packages/app/src/components/Root/LogoIcon.tsx
+!/backstage/packages/app/public/sequoia-logo.svg
 /backstage*-pure
 git-temp
 

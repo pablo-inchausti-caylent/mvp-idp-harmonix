@@ -17,7 +17,14 @@
       "Bash(make build-backstage:*)",
       "Bash(tee:*)",
       "Bash(aws ecs describe-tasks:*)",
-      "Bash(aws ecs describe-services:*)"
+      "Bash(aws ecs describe-services:*)",
+      "Bash(git describe:*)",
+      "Bash(aws ecs list-clusters:*)",
+      "Bash(aws ecs list-services:*)",
+      "Bash(aws ecs list-tasks:*)",
+      "Bash(aws ecs describe-task-definition:*)",
+      "Bash(aws elbv2 describe-target-health:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []
