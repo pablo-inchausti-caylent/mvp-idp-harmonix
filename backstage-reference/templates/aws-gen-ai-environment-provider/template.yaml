@@ -161,7 +161,7 @@ spec:
           ui:field: RepoUrlPicker
           ui:options:
             allowedHosts:
-              - {{ gitlab_hostname }}
+              - git.harmonix.glaciar.org
             allowedOwners:
               - aws-environment-providers
   steps:
@@ -201,13 +201,13 @@ spec:
       action: fetch:plain
       input:
         targetPath: ./.iac/opa-gen-ai-environment
-        url: "https://{{gitlab_hostname}}/opa-admin/backstage-reference/-/tree/main/environments/opa-gen-ai-environment"
+        url: "https://git.harmonix.glaciar.org/opa-admin/backstage-reference/-/tree/main/environments/opa-gen-ai-environment"
     - id: fetchIacCommonConstructs
       name: Fetch IaC Common Constructs
       action: fetch:plain
       input:
         targetPath: ./.iac/opa-common-constructs
-        url: "https://{{gitlab_hostname}}/opa-admin/backstage-reference/-/tree/main/environments/opa-common-constructs"
+        url: "https://git.harmonix.glaciar.org/opa-admin/backstage-reference/-/tree/main/environments/opa-common-constructs"
     - id: createYarnPackageFile
       name: Configure Yarn Package Manager
       action: harmonix:fs:write
