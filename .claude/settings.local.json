@@ -24,7 +24,8 @@
       "Bash(aws ecs list-tasks:*)",
       "Bash(aws ecs describe-task-definition:*)",
       "Bash(aws elbv2 describe-target-health:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(aws sts get-caller-identity:*)"
     ],
     "deny": [],
     "ask": []
