@@ -52,6 +52,16 @@ output "budget_arns" {
   value       = module.harmnoix_stack.budget_arns
 }
 
+output "resource_group_arn" {
+  description = "ARN of the Harmonix MVP resource group"
+  value       = module.harmnoix_stack.resource_group_arn
+}
+
+output "resource_group_name" {
+  description = "Name of the Harmonix MVP resource group"
+  value       = module.harmnoix_stack.resource_group_name
+}
+
 #------------------------------------------------------------
 # Generated Password Output
 #------------------------------------------------------------

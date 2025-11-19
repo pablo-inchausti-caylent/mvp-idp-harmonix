@@ -75,6 +75,16 @@ output "budget_arns" {
   value       = module.budgets.budget_arns
 }
 
+output "resource_group_arn" {
+  description = "ARN of the Harmonix MVP resource group"
+  value       = module.budgets.resource_group_arn
+}
+
+output "resource_group_name" {
+  description = "Name of the Harmonix MVP resource group"
+  value       = module.budgets.resource_group_name
+}
+
 output "eventbridge_rule_arn" {
   description = "ARN of the EventBridge schedule rule"
   value       = module.harmonix_lambda.eventbridge_rule_arn

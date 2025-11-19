@@ -38,3 +38,25 @@ resource "aws_budgets_budget" "cost_budget" {
 
   tags = var.tags
 }
+
+#--------------------------------------------------------------
+# AWS Resource Group - Group all harmonix-mvp resources
+#--------------------------------------------------------------
+resource "aws_resourcegroups_group" "harmonix_resources" {
+  name        = "harmonix-mvp-resources"
+  description = "Resource group for all Harmonix MVP resources tagged with caylent:project=harmonix-mvp"
+
+  resource_query {
+    query = jsonencode({
+      ResourceTypeFilters = ["AWS::AllSupported"]
+      TagFilters = [
+        {
+          Key    = "caylent:project"
+          Values = ["harmonix-mvp"]
+        }
+      ]
+    })
+  }
+
+  tags = var.tags
+}

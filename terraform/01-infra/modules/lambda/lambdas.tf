@@ -18,7 +18,7 @@ module "lambda_function" {
   # CloudWatch Logs
   cloudwatch_logs_retention_in_days = 7
 
-  # EventBridge Schedule - Run every day at 11 PM EST (4 AM UTC)
+  # EventBridge Schedule - Run every day at 4 AM GMT-3 (7 AM UTC)
   create_current_version_allowed_triggers = false
   allowed_triggers = {
     EventBridgeSchedule = {
@@ -36,7 +36,7 @@ module "lambda_function" {
 resource "aws_cloudwatch_event_rule" "lambda_schedule" {
   name                = "harmonix-ec2-monitor-schedule"
   description         = "Trigger Lambda to shutdown EC2 instances daily"
-  schedule_expression = "cron(0 4 * * ? *)" # 4 AM UTC = 11 PM EST
+  schedule_expression = "cron(0 7 * * ? *)" # 7 AM UTC = 4 AM GMT-3 (ART - Argentina Time)
 
   tags = var.tags
 }
