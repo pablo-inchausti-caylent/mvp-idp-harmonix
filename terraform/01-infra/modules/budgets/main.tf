@@ -44,7 +44,7 @@ resource "aws_budgets_budget" "cost_budget" {
 #--------------------------------------------------------------
 resource "aws_resourcegroups_group" "harmonix_resources" {
   name        = "harmonix-mvp-resources"
-  description = "Resource group for all Harmonix MVP resources tagged with caylent:project=harmonix-mvp"
+  description = "Resource group for all Harmonix MVP resources tagged with caylent-project harmonix-mvp"
 
   resource_query {
     query = jsonencode({

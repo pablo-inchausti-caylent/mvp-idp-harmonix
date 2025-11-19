@@ -17,7 +17,7 @@ def get_instances_ids(region):
         response   = ec2_client.describe_instances()
 
         instance_ids = []
-    
+
         for reservation in response["Reservations"]:
             for instance in reservation["Instances"]:
 
@@ -27,7 +27,7 @@ def get_instances_ids(region):
                 print("Region: {0:10} - Instancia [{1}, {2}]".format(
                         region, instance_id, state_name)
                     )
-                
+
                 if state_name != 'stopped':
                     instance_ids.append(instance["InstanceId"])
 
@@ -35,23 +35,25 @@ def get_instances_ids(region):
 
     except Exception as exception:
         print(f"Encountered exception in Region {region} get_instances_ids: {exception}")
+        return []  # Return empty list on error
 
 
     
 def lambda_handler(event, context):
     try:
-        regiones = [ 'us-east-1', 'us-west-2', 'af-south-1' ]
+        regiones = [ 'us-east-1', 'us-east-2', 'us-west-2' ]
         
-        for region in regiones:    
-            
-            ec2_client = boto3.client('ec2', region_name=region)
-                    
-            instance_ids = get_instances_ids(region)
-            
-            if instance_ids != []:
-                ec2_client.stop_instances(InstanceIds=instance_ids)
+        for region in regiones:
 
-            print(f"Region {region} ::: Stop de instances {instance_ids}")
+            ec2_client = boto3.client('ec2', region_name=region)
+
+            instance_ids = get_instances_ids(region)
+
+            if instance_ids and len(instance_ids) > 0:
+                ec2_client.stop_instances(InstanceIds=instance_ids)
+                print(f"Region {region} ::: Stopped instances {instance_ids}")
+            else:
+                print(f"Region {region} ::: No instances to stop")
 
         code = 200
         response = "Todas las instancias detenidas Ok"
