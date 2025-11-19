@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git check-ignore:*)",
+      "Bash(terraform validate:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

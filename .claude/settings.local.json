@@ -25,7 +25,9 @@
       "Bash(aws ecs describe-task-definition:*)",
       "Bash(aws elbv2 describe-target-health:*)",
       "Bash(pkill:*)",
-      "Bash(aws sts get-caller-identity:*)"
+      "Bash(aws sts get-caller-identity:*)",
+      "Bash(aws dynamodb describe-table:*)",
+      "Bash(aws iam get-role:*)"
     ],
     "deny": [],
     "ask": []

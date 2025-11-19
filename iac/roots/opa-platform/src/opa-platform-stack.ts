@@ -111,13 +111,20 @@ export class OPAPlatformStack extends cdk.Stack {
       vpcAzCount: +(getEnvVarValue(process.env.NUM_AZ) || 3),
     });
 
+    // Get RDS instance configuration from environment variables
+    // Default to production values if not specified
+    const rdsInstanceClass = getEnvVarValue(process.env.RDS_INSTANCE_CLASS) || "T4G";
+    const rdsInstanceSize = getEnvVarValue(process.env.RDS_INSTANCE_SIZE) || "MEDIUM";
+
     // Create DB for backstage platform
-    // TODO: PEI Customization - Change instance type to a smaller one after initial testing
     const rdsConstruct = new RdsConstruct(this, "rds-construct", {
       opaEnv: opaParams,
       vpc: network.vpc,
       kmsKey: key,
-      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T4G, ec2.InstanceSize.MEDIUM),
+      instanceType: ec2.InstanceType.of(
+        ec2.InstanceClass[rdsInstanceClass as keyof typeof ec2.InstanceClass],
+        ec2.InstanceSize[rdsInstanceSize as keyof typeof ec2.InstanceSize]
+      ),
     });
 
     // Create Solution DynamoDB Tables - SecurityRoleMapping
@@ -162,14 +169,20 @@ export class OPAPlatformStack extends cdk.Stack {
         stringValue: getEnvVarValue(process.env.GITLAB_VERSION) || "latest",
       });
 
+    // Get GitLab Host instance configuration from environment variables
+    // Default to production values if not specified
+    const gitlabHostDiskSize = +(getEnvVarValue(process.env.GITLAB_HOST_DISK_SIZE) || 3000);
+    const gitlabHostInstanceClass = getEnvVarValue(process.env.GITLAB_HOST_INSTANCE_CLASS) || "C5";
+    const gitlabHostInstanceSize = getEnvVarValue(process.env.GITLAB_HOST_INSTANCE_SIZE) || "XLARGE";
+
     // Create a secured EC2 Hosted Gitlab
     gitlabHostingConstruct = new GitlabHostingConstruct(this, "GitlabHosting-Construct", {
       opaEnv: opaParams,
       network: network,
       accessLogBucket: network.logBucket,
-      instanceDiskSize: 3000,
-      instanceSize: ec2.InstanceSize.XLARGE,
-      instanceClass: ec2.InstanceClass.C5,
+      instanceDiskSize: gitlabHostDiskSize,
+      instanceSize: ec2.InstanceSize[gitlabHostInstanceSize as keyof typeof ec2.InstanceSize],
+      instanceClass: ec2.InstanceClass[gitlabHostInstanceClass as keyof typeof ec2.InstanceClass],
       hostedZone: hostedZone,
       gitlabSecret,
     });
@@ -217,15 +230,21 @@ export class OPAPlatformStack extends cdk.Stack {
       automationSecret,
     });
 
+    // Get GitLab Runner instance configuration from environment variables
+    // Default to production values if not specified
+    const gitlabRunnerDiskSize = +(getEnvVarValue(process.env.GITLAB_RUNNER_DISK_SIZE) || 3000);
+    const gitlabRunnerInstanceClass = getEnvVarValue(process.env.GITLAB_RUNNER_INSTANCE_CLASS) || "C5";
+    const gitlabRunnerInstanceSize = getEnvVarValue(process.env.GITLAB_RUNNER_INSTANCE_SIZE) || "XLARGE";
+
     // Create EC2 Gitlab Runner
     const gitlabRunner = new GitlabRunnerConstruct(this, "GitlabRunner-Construct", {
       opaEnv: opaParams,
       network,
       runnerSg: gitlabHostingConstruct.gitlabRunnerSecurityGroup,
       gitlabSecret,
-      instanceDiskSize: 3000,
-      instanceSize: ec2.InstanceSize.XLARGE,
-      instanceClass: ec2.InstanceClass.C5,
+      instanceDiskSize: gitlabRunnerDiskSize,
+      instanceSize: ec2.InstanceSize[gitlabRunnerInstanceSize as keyof typeof ec2.InstanceSize],
+      instanceClass: ec2.InstanceClass[gitlabRunnerInstanceClass as keyof typeof ec2.InstanceClass],
     });
     // wait till gitlab host is done.
     gitlabRunner.node.addDependency(gitlabHostingConstruct);

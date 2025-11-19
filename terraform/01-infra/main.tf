@@ -1,0 +1,83 @@
+resource "random_password" "this" {
+  length           = 16
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}<>:?"
+}
+
+resource "null_resource" "this" {
+  triggers = {
+    always_run = timestamp()
+  }
+  provisioner "local-exec" {
+    command = "echo '${random_password.this.result}' > /tmp/${var.name}_password.txt"
+  }
+  provisioner "local-exec" {
+    command = "echo -e '${jsonencode(local.tags)}' > /tmp/${var.name}_tags.txt"
+  }
+}
+
+
+#--------------------------------------------------------------
+# LAMBDA :: HARMONIX
+#--------------------------------------------------------------
+module "harmonix_lambda" {
+  source = "./modules/lambda"
+  tags   = local.tags
+}
+
+#--------------------------------------------------------------
+# AWS BUDGETS :: COST ALARMS
+#--------------------------------------------------------------
+module "budgets" {
+  source = "./modules/budgets"
+
+  environment         = var.environment
+  notification_emails = var.budget_notification_emails
+
+  budget_limits = {
+    "warning"  = "5"
+    "critical" = "15"
+    "maximum"  = "50"
+  }
+
+  tags = local.tags
+}
+
+
+output "generated_password" {
+  description = "The generated random password."
+  value       = random_password.this.result
+  sensitive   = true
+}
+
+output "lambda_function_name" {
+  description = "Name of the EC2 Monitor Lambda function"
+  value       = module.harmonix_lambda.lambda_function_name
+}
+
+output "lambda_function_arn" {
+  description = "ARN of the EC2 Monitor Lambda function"
+  value       = module.harmonix_lambda.lambda_function_arn
+}
+
+output "lambda_log_group" {
+  description = "CloudWatch Log Group for Lambda function"
+  value       = module.harmonix_lambda.lambda_cloudwatch_log_group
+}
+
+output "budget_ids" {
+  description = "IDs of the created budgets"
+  value       = module.budgets.budget_ids
+}
+
+output "budget_arns" {
+  description = "ARNs of the created budgets"
+  value       = module.budgets.budget_arns
+}
+
+output "eventbridge_rule_arn" {
+  description = "ARN of the EventBridge schedule rule"
+  value       = module.harmonix_lambda.eventbridge_rule_arn
+}
+
+
