@@ -1,3 +1,8 @@
+variable "name" {
+  type        = string
+  description = "Name prefix for all resources"
+}
+
 variable "environment" {
   type        = string
   description = "Environment name (dev, test, prod)"

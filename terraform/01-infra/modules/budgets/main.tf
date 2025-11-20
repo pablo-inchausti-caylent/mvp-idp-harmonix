@@ -5,7 +5,7 @@
 resource "aws_budgets_budget" "cost_budget" {
   for_each = var.budget_limits
 
-  name              = "harmonix-${var.environment}-budget-${each.key}"
+  name              = "${var.name}-${var.environment}-budget-${each.key}"
   budget_type       = "COST"
   limit_amount      = each.value
   limit_unit        = "USD"
@@ -40,19 +40,19 @@ resource "aws_budgets_budget" "cost_budget" {
 }
 
 #--------------------------------------------------------------
-# AWS Resource Group - Group all harmonix-mvp resources
+# AWS Resource Group - Group all resources
 #--------------------------------------------------------------
 resource "aws_resourcegroups_group" "harmonix_resources" {
-  name        = "harmonix-mvp-resources"
-  description = "Resource group for all Harmonix MVP resources tagged with caylent-project harmonix-mvp"
+  name        = "${var.name}-resources"
+  description = "Resource group for all ${var.name} resources"
 
   resource_query {
     query = jsonencode({
       ResourceTypeFilters = ["AWS::AllSupported"]
       TagFilters = [
         {
-          Key    = "caylent:project"
-          Values = ["harmonix-mvp"]
+          Key    = "Name"
+          Values = [var.name]
         }
       ]
     })

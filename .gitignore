@@ -164,3 +164,8 @@ git-temp
 
 config/demo.env
 config/my.env
+
+
+# Terraform environment for glaciar
+terraform/01-infra/envs/glaciar-*/*
+

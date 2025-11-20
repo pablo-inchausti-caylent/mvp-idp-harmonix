@@ -4,7 +4,7 @@
 module "lambda_function" {
   source = "terraform-aws-modules/lambda/aws"
 
-  function_name = "harmonix-ec2-monitor"
+  function_name = "${var.name}-ec2-monitor"
   description   = "EC2 Monitor and Shutdown Lambda Function"
   handler       = "lambda-EC2-monitor.lambda_handler"
   runtime       = "python3.12"
@@ -34,7 +34,7 @@ module "lambda_function" {
 # EventBridge Rule - Schedule Lambda Execution
 #--------------------------------------------------------------
 resource "aws_cloudwatch_event_rule" "lambda_schedule" {
-  name                = "harmonix-ec2-monitor-schedule"
+  name                = "${var.name}-ec2-monitor-schedule"
   description         = "Trigger Lambda to shutdown EC2 instances daily"
   schedule_expression = "cron(0 7 * * ? *)" # 7 AM UTC = 4 AM GMT-3 (ART - Argentina Time)
 

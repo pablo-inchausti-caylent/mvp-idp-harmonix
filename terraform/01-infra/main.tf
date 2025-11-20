@@ -18,10 +18,11 @@ resource "null_resource" "this" {
 
 
 #--------------------------------------------------------------
-# LAMBDA :: HARMONIX
+# LAMBDA
 #--------------------------------------------------------------
 module "harmonix_lambda" {
   source = "./modules/lambda"
+  name   = var.name
   tags   = local.tags
 }
 
@@ -31,6 +32,7 @@ module "harmonix_lambda" {
 module "budgets" {
   source = "./modules/budgets"
 
+  name                = var.name
   environment         = var.environment
   notification_emails = var.budget_notification_emails
 
