@@ -2,7 +2,16 @@
   "permissions": {
     "allow": [
       "Bash(git check-ignore:*)",
-      "Bash(terraform validate:*)"
+      "Bash(terraform validate:*)",
+      "WebSearch",
+      "Bash(find:*)",
+      "Bash(aws secretsmanager get-secret-value:*)",
+      "Bash(aws rds describe-db-instances:*)",
+      "Bash(aws ecs list-services:*)",
+      "Bash(aws ecs list-clusters:*)",
+      "Bash(aws ecr describe-images:*)",
+      "Bash(aws ecs:*)",
+      "WebFetch(domain:harmonix.glaciar.org)"
     ],
     "deny": [],
     "ask": []

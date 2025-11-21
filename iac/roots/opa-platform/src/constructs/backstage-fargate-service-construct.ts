@@ -1,7 +1,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { aws_ecs_patterns as ecsPatterns, StackProps } from "aws-cdk-lib";
+import { aws_ecs_patterns as ecsPatterns, Duration, StackProps } from "aws-cdk-lib";
 
 import { HostedZoneConstruct, NetworkConstruct, OPAEnvironmentParams } from "@aws/aws-app-development-common-constructs";
 
@@ -40,9 +40,9 @@ export interface BackstageFargateServiceConstructProps extends StackProps {
    */
   readonly accessLogBucket: s3.IBucket;
   /**
-   * The DatabaseCluster that the service will need to connect to
+   * The DatabaseCluster or DatabaseInstance that the service will need to connect to
    */
-  readonly dbCluster: rds.DatabaseCluster;
+  readonly dbCluster: rds.DatabaseCluster | rds.DatabaseInstance;
   /**
    * The OPA infrastructure configuration
    */
@@ -148,8 +148,10 @@ export class BackstageFargateServiceConstruct extends Construct {
 
     // Create an object of the plain text environment variables
     const envVars = {
-      POSTGRES_HOST: props.dbCluster.clusterEndpoint.hostname,
-      POSTGRES_PORT: `${props.dbCluster.clusterEndpoint.port}`,
+      POSTGRES_HOST: 'clusterEndpoint' in props.dbCluster ? props.dbCluster.clusterEndpoint.hostname : props.dbCluster.instanceEndpoint.hostname,
+      POSTGRES_PORT: 'clusterEndpoint' in props.dbCluster ? `${props.dbCluster.clusterEndpoint.port}` : `${props.dbCluster.instanceEndpoint.port}`,
+      POSTGRES_DB: "opaplatformdb",
+      POSTGRES_SSL_REJECT_UNAUTHORIZED: "false",
       BACKSTAGE_TITLE: "Harmonix on AWS",
       BACKSTAGE_ORGNAME: "Harmonix",
       PROTOCOL: "https",
@@ -209,11 +211,21 @@ export class BackstageFargateServiceConstruct extends Construct {
         cpu: 512,
         domainZone: props.hostedZone?.hostedZone,
         domainName: props.hostedZone?.hostedZone.zoneName,
+        healthCheckGracePeriod: Duration.seconds(60),
       }
     );
 
     const cfnEcsService = albFargateService.service.node.defaultChild as ecs.CfnService;
     cfnEcsService.desiredCount = 0;
+    
+    // Configure the target group health check to use the Backstage health endpoint
+    albFargateService.targetGroup.configureHealthCheck({
+      path: '/healthcheck',
+      interval: Duration.seconds(30),
+      timeout: Duration.seconds(5),
+      healthyThresholdCount: 2,
+      unhealthyThresholdCount: 3,
+    });
     
     // Store the backstage service name as an SSM Parameter
     const serviceNameParam = new ssm.StringParameter(this, `${props.opaEnv.prefix}-backstage-service-name`, {

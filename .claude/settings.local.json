@@ -27,7 +27,12 @@
       "Bash(pkill:*)",
       "Bash(aws sts get-caller-identity:*)",
       "Bash(aws dynamodb describe-table:*)",
-      "Bash(aws iam get-role:*)"
+      "Bash(aws iam get-role:*)",
+      "Bash(aws elbv2 describe-target-groups:*)",
+      "Bash(aws ec2 describe-security-groups:*)",
+      "Bash(aws ecs update-service:*)",
+      "Bash(xargs:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

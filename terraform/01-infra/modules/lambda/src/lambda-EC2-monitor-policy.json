@@ -9,6 +9,15 @@
 				"ec2:DescribeInstances"
 			],
 			"Resource": "*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"rds:StartDBInstance",
+				"rds:StopDBInstance",
+				"rds:DescribeDBInstances"
+			],
+			"Resource": "*"
 		}
 	]
 }

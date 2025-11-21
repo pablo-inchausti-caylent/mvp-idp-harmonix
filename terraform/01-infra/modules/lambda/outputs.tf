@@ -13,7 +13,17 @@ output "lambda_cloudwatch_log_group" {
   value       = module.lambda_function.lambda_cloudwatch_log_group_name
 }
 
-output "eventbridge_rule_arn" {
-  description = "The ARN of the EventBridge rule"
-  value       = aws_cloudwatch_event_rule.lambda_schedule.arn
+output "ec2_stop_rule_arn" {
+  description = "The ARN of the EC2 stop EventBridge rule"
+  value       = aws_cloudwatch_event_rule.ec2_stop_schedule.arn
+}
+
+output "rds_start_rule_arn" {
+  description = "The ARN of the RDS start EventBridge rule"
+  value       = aws_cloudwatch_event_rule.rds_start_schedule.arn
+}
+
+output "rds_stop_rule_arn" {
+  description = "The ARN of the RDS stop EventBridge rule"
+  value       = aws_cloudwatch_event_rule.rds_stop_schedule.arn
 }

@@ -28,6 +28,7 @@ export interface GitlabHostingConstructProps extends cdk.StackProps {
   readonly allowedIPs?: string[];
   readonly hostedZone?: HostedZoneConstruct;
   readonly gitlabSecret: ISecret;
+  readonly spotMaxPrice?: string;
 }
 
 const defaultProps: Partial<GitlabHostingConstructProps> = {};
@@ -104,6 +105,7 @@ export class GitlabHostingConstruct extends Construct {
       volume: ec2.BlockDeviceVolume.ebs(props.instanceDiskSize, {
         encrypted: true,
         volumeType: ec2.EbsDeviceVolumeType.GP3,
+        deleteOnTermination: props.spotMaxPrice ? false : true, // Persist volume for spot instances
       }),
     };
 
@@ -129,30 +131,71 @@ export class GitlabHostingConstruct extends Construct {
     const linuxAmiMap = props.GitlabAmi || { [props.opaEnv.awsRegion]: new ec2.LookupMachineImage(ubuntuLookupProps).getImage(this).imageId }
     const machineImage = ec2.MachineImage.genericLinux(linuxAmiMap);
 
-    const gitlabHost = new ec2.Instance(this, "GitlabHost", {
-      instanceName: `${props.opaEnv.prefix}-GitlabHost`,
-      instanceType: ec2.InstanceType.of(props.instanceClass, props.instanceSize),
-      vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
-      vpc: props.network.vpc,
-      securityGroup: instanceSecurityGroup,
-      machineImage,
-      role: gitlabEc2Role,
-      blockDevices: [rootVolume],
-      requireImdsv2: true,
-    });
+    const userDataScript = readFileSync("./src/scripts/user-data.sh", "utf8");
+    const userData = ec2.UserData.forLinux();
+    userData.addCommands(userDataScript);
+
+    let gitlabHost: ec2.Instance | ec2.CfnInstance;
+    let gitlabInstanceId: string;
+
+    if (props.spotMaxPrice) {
+      // Create persistent spot instance with STOP behavior
+      const launchTemplate = new ec2.LaunchTemplate(this, "GitlabHostLaunchTemplate", {
+        instanceType: ec2.InstanceType.of(props.instanceClass, props.instanceSize),
+        machineImage,
+        userData,
+        securityGroup: instanceSecurityGroup,
+        role: gitlabEc2Role,
+        requireImdsv2: true,
+        blockDevices: [rootVolume],
+        spotOptions: {
+          maxPrice: parseFloat(props.spotMaxPrice),
+          interruptionBehavior: ec2.SpotInstanceInterruption.STOP, // STOP (not terminate) to preserve IP and data
+          requestType: ec2.SpotRequestType.PERSISTENT, // PERSISTENT allows stop/start with same IP
+        },
+      });
+
+      // Create the spot instance using CloudFormation resource
+      const cfnGitlabHost = new ec2.CfnInstance(this, "GitlabHostSpot", {
+        launchTemplate: {
+          launchTemplateId: launchTemplate.launchTemplateId,
+          version: launchTemplate.latestVersionNumber,
+        },
+        subnetId: props.network.vpc.selectSubnets({ subnetType: ec2.SubnetType.PUBLIC }).subnetIds[0],
+        tags: [
+          { key: "Name", value: `${props.opaEnv.prefix}-GitlabHost-Spot` },
+        ],
+      });
+
+      gitlabHost = cfnGitlabHost;
+      gitlabInstanceId = cfnGitlabHost.ref;
+    } else {
+      // Create regular on-demand instance
+      const instance = new ec2.Instance(this, "GitlabHost", {
+        instanceName: `${props.opaEnv.prefix}-GitlabHost`,
+        instanceType: ec2.InstanceType.of(props.instanceClass, props.instanceSize),
+        vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
+        vpc: props.network.vpc,
+        securityGroup: instanceSecurityGroup,
+        machineImage,
+        role: gitlabEc2Role,
+        blockDevices: [rootVolume],
+        requireImdsv2: true,
+      });
+      instance.addUserData(userDataScript);
+      gitlabHost = instance;
+      gitlabInstanceId = instance.instanceId;
+    }
+
     new cdk.CfnOutput(this, "GitlabAmiOutput", {
       value: JSON.stringify(linuxAmiMap),
       description: "The AMI ID used for the GitLab instance",
     });
-    
+
     NagSuppressions.addResourceSuppressions(gitlabHost, [
       { id: 'AwsSolutions-EC28', reason: 'Gitlab is a 3rd party scm used by the prototype to simulate customer environment.  Customer environment will not use EC2 and, therefore, detailed monitoring and incurring extra cost is not required.' },
       { id: 'AwsSolutions-EC29', reason: 'Gitlab is a 3rd party scm used by the prototype to simulate customer environment.  Autoscaling is not required, nor appropriate for this scm implementation.' },
     ]);
-
-
-    const userDataScript = readFileSync("./src/scripts/user-data.sh", "utf8");
-    gitlabHost.addUserData(userDataScript);
 
     // create ALB
     const gitlabAlb = new elb.ApplicationLoadBalancer(this, `${props.opaEnv.prefix}-gitlab-alb`, {
@@ -226,7 +269,11 @@ export class GitlabHostingConstruct extends Construct {
     httpsListener.addTargets(`${props.opaEnv.prefix}-target-grp2`, {
       protocol: elb.ApplicationProtocol.HTTP,
       targetGroupName: `${props.opaEnv.prefix}-git-target-grp2`,
-      targets: [new elbTargets.InstanceTarget(gitlabHost, 80)],
+      targets: [
+        gitlabHost instanceof ec2.Instance
+          ? new elbTargets.InstanceTarget(gitlabHost, 80)
+          : new elbTargets.InstanceIdTarget(gitlabInstanceId, 80)
+      ],
       healthCheck: {
         enabled: true,
         protocol: elb.Protocol.HTTP,

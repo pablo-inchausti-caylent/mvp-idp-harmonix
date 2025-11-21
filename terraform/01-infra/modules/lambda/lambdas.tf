@@ -4,8 +4,8 @@
 module "lambda_function" {
   source = "terraform-aws-modules/lambda/aws"
 
-  function_name = "${var.name}-ec2-monitor"
-  description   = "EC2 Monitor and Shutdown Lambda Function"
+  function_name = "${var.name}-ec2-rds-scheduler"
+  description   = "EC2 and RDS Scheduler Lambda Function"
   handler       = "lambda-EC2-monitor.lambda_handler"
   runtime       = "python3.12"
   timeout       = 20
@@ -18,12 +18,20 @@ module "lambda_function" {
   # CloudWatch Logs
   cloudwatch_logs_retention_in_days = 7
 
-  # EventBridge Schedule - Run every day at 4 AM GMT-3 (7 AM UTC)
+  # EventBridge Schedules - Multiple triggers for EC2 and RDS
   create_current_version_allowed_triggers = false
   allowed_triggers = {
-    EventBridgeSchedule = {
+    EC2StopSchedule = {
       principal  = "events.amazonaws.com"
-      source_arn = aws_cloudwatch_event_rule.lambda_schedule.arn
+      source_arn = aws_cloudwatch_event_rule.ec2_stop_schedule.arn
+    }
+    RDSStartSchedule = {
+      principal  = "events.amazonaws.com"
+      source_arn = aws_cloudwatch_event_rule.rds_start_schedule.arn
+    }
+    RDSStopSchedule = {
+      principal  = "events.amazonaws.com"
+      source_arn = aws_cloudwatch_event_rule.rds_stop_schedule.arn
     }
   }
 
@@ -31,18 +39,53 @@ module "lambda_function" {
 }
 
 #--------------------------------------------------------------
-# EventBridge Rule - Schedule Lambda Execution
+# EventBridge Rules - Schedule Lambda Execution
 #--------------------------------------------------------------
-resource "aws_cloudwatch_event_rule" "lambda_schedule" {
-  name                = "${var.name}-ec2-monitor-schedule"
-  description         = "Trigger Lambda to shutdown EC2 instances daily"
-  schedule_expression = "cron(0 7 * * ? *)" # 7 AM UTC = 4 AM GMT-3 (ART - Argentina Time)
+
+# 1. Stop EC2 instances at 3 AM GMT-3 (6 AM UTC)
+resource "aws_cloudwatch_event_rule" "ec2_stop_schedule" {
+  name                = "${var.name}-ec2-stop-schedule"
+  description         = "Stop EC2 instances daily at 3 AM GMT-3"
+  schedule_expression = "cron(0 6 * * ? *)" # 6 AM UTC = 3 AM GMT-3
 
   tags = var.tags
 }
 
-resource "aws_cloudwatch_event_target" "lambda_target" {
-  rule      = aws_cloudwatch_event_rule.lambda_schedule.name
-  target_id = "TriggerLambda"
+resource "aws_cloudwatch_event_target" "ec2_stop_target" {
+  rule      = aws_cloudwatch_event_rule.ec2_stop_schedule.name
+  target_id = "EC2StopTarget"
   arn       = module.lambda_function.lambda_function_arn
+  input     = jsonencode({ action = "stop" })
+}
+
+# 2. Start RDS instances at 9 AM GMT-3 (12 PM UTC)
+resource "aws_cloudwatch_event_rule" "rds_start_schedule" {
+  name                = "${var.name}-rds-start-schedule"
+  description         = "Start RDS instances daily at 9 AM GMT-3"
+  schedule_expression = "cron(0 12 * * ? *)" # 12 PM UTC = 9 AM GMT-3
+
+  tags = var.tags
+}
+
+resource "aws_cloudwatch_event_target" "rds_start_target" {
+  rule      = aws_cloudwatch_event_rule.rds_start_schedule.name
+  target_id = "RDSStartTarget"
+  arn       = module.lambda_function.lambda_function_arn
+  input     = jsonencode({ action = "start" })
+}
+
+# 3. Stop RDS instances at 3:15 AM GMT-3 (6:15 AM UTC)
+resource "aws_cloudwatch_event_rule" "rds_stop_schedule" {
+  name                = "${var.name}-rds-stop-schedule"
+  description         = "Stop RDS instances daily at 3:15 AM GMT-3"
+  schedule_expression = "cron(15 6 * * ? *)" # 6 AM UTC = 3 AM GMT-3
+
+  tags = var.tags
+}
+
+resource "aws_cloudwatch_event_target" "rds_stop_target" {
+  rule      = aws_cloudwatch_event_rule.rds_stop_schedule.name
+  target_id = "RDSStopTarget"
+  arn       = module.lambda_function.lambda_function_arn
+  input     = jsonencode({ action = "stop" })
 }

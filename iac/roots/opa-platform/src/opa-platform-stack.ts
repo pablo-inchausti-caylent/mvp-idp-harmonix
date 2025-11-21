@@ -174,6 +174,7 @@ export class OPAPlatformStack extends cdk.Stack {
     const gitlabHostDiskSize = +(getEnvVarValue(process.env.GITLAB_HOST_DISK_SIZE) || 3000);
     const gitlabHostInstanceClass = getEnvVarValue(process.env.GITLAB_HOST_INSTANCE_CLASS) || "C5";
     const gitlabHostInstanceSize = getEnvVarValue(process.env.GITLAB_HOST_INSTANCE_SIZE) || "XLARGE";
+    const gitlabHostSpotMaxPrice = getEnvVarValue(process.env.GITLAB_HOST_SPOT_MAX_PRICE); // Optional: enable persistent spot instances
 
     // Create a secured EC2 Hosted Gitlab
     gitlabHostingConstruct = new GitlabHostingConstruct(this, "GitlabHosting-Construct", {
@@ -185,6 +186,7 @@ export class OPAPlatformStack extends cdk.Stack {
       instanceClass: ec2.InstanceClass[gitlabHostInstanceClass as keyof typeof ec2.InstanceClass],
       hostedZone: hostedZone,
       gitlabSecret,
+      spotMaxPrice: gitlabHostSpotMaxPrice,
     });
     gitlabHostingConstruct.node.addDependency(gitlabSecret);
     gitlabHostingConstruct.node.addDependency(gitlabVersionParam);
@@ -235,6 +237,7 @@ export class OPAPlatformStack extends cdk.Stack {
     const gitlabRunnerDiskSize = +(getEnvVarValue(process.env.GITLAB_RUNNER_DISK_SIZE) || 3000);
     const gitlabRunnerInstanceClass = getEnvVarValue(process.env.GITLAB_RUNNER_INSTANCE_CLASS) || "C5";
     const gitlabRunnerInstanceSize = getEnvVarValue(process.env.GITLAB_RUNNER_INSTANCE_SIZE) || "XLARGE";
+    const gitlabRunnerSpotMaxPrice = getEnvVarValue(process.env.GITLAB_RUNNER_SPOT_MAX_PRICE); // Optional: enable spot instances
 
     // Create EC2 Gitlab Runner
     const gitlabRunner = new GitlabRunnerConstruct(this, "GitlabRunner-Construct", {
@@ -245,6 +248,7 @@ export class OPAPlatformStack extends cdk.Stack {
       instanceDiskSize: gitlabRunnerDiskSize,
       instanceSize: ec2.InstanceSize[gitlabRunnerInstanceSize as keyof typeof ec2.InstanceSize],
       instanceClass: ec2.InstanceClass[gitlabRunnerInstanceClass as keyof typeof ec2.InstanceClass],
+      spotMaxPrice: gitlabRunnerSpotMaxPrice,
     });
     // wait till gitlab host is done.
     gitlabRunner.node.addDependency(gitlabHostingConstruct);

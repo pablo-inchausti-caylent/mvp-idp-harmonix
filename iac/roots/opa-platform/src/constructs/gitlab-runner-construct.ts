@@ -28,6 +28,7 @@ export interface GitlabRunnerConstructProps extends cdk.StackProps {
   readonly instanceDiskSize: number;
   readonly instanceSize: ec2.InstanceSize;
   readonly instanceClass: ec2.InstanceClass;
+  readonly spotMaxPrice?: string;
 }
 
 const defaultProps: Partial<GitlabRunnerConstructProps> = {};
@@ -149,6 +150,7 @@ export class GitlabRunnerConstruct extends Construct {
       volume: BlockDeviceVolume.ebs(props.instanceDiskSize, {
         encrypted: true,
         volumeType: autoscaling.EbsDeviceVolumeType.GP3,
+        deleteOnTermination: true, // Delete volumes on termination (runners are stateless)
       }),
     };
 
@@ -190,6 +192,15 @@ export class GitlabRunnerConstruct extends Construct {
       httpPutResponseHopLimit: 2,
       blockDevices: [blockDevice],
       httpTokens: ec2.LaunchTemplateHttpTokens.REQUIRED,
+      // Configure spot instance options if spot price is provided
+      // Runners use ONE-TIME spot (stateless, ASG handles replacements)
+      ...(props.spotMaxPrice && {
+        spotOptions: {
+          maxPrice: parseFloat(props.spotMaxPrice),
+          requestType: ec2.SpotRequestType.ONE_TIME, // ONE-TIME is required for ASG
+          // Note: interruptionBehavior defaults to TERMINATE (which is what we want for runners)
+        },
+      }),
     });
     launchTemplate.connections.addSecurityGroup(props.runnerSg);
 
@@ -201,6 +212,8 @@ export class GitlabRunnerConstruct extends Construct {
       minCapacity: 1,
       maxCapacity: 1,
       launchTemplate,
+      // Note: Spot instances are stateless and will terminate on interruption
+      // ASG will automatically replace them
     });
 
     NagSuppressions.addResourceSuppressions(autoScalingGroup, [

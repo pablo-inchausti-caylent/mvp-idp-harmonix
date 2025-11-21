@@ -34,9 +34,19 @@ output "lambda_log_group" {
   value       = module.harmnoix_stack.lambda_log_group
 }
 
-output "eventbridge_rule_arn" {
-  description = "ARN of the EventBridge schedule rule"
-  value       = module.harmnoix_stack.eventbridge_rule_arn
+output "ec2_stop_eventbridge_rule_arn" {
+  description = "ARN of the EC2 stop EventBridge schedule rule (4 AM)"
+  value       = module.harmnoix_stack.ec2_stop_eventbridge_rule_arn
+}
+
+output "rds_start_eventbridge_rule_arn" {
+  description = "ARN of the RDS start EventBridge schedule rule (9 AM)"
+  value       = module.harmnoix_stack.rds_start_eventbridge_rule_arn
+}
+
+output "rds_stop_eventbridge_rule_arn" {
+  description = "ARN of the RDS stop EventBridge schedule rule (10 PM)"
+  value       = module.harmnoix_stack.rds_stop_eventbridge_rule_arn
 }
 
 #------------------------------------------------------------
