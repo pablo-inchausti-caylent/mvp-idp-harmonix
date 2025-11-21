@@ -17,6 +17,14 @@ budget_notification_emails = [
    "pablo.inchausti+alert+3377@glaciar.io",
 ]
 
+#--------------------------------------------------------------
+# OIDC Configuration for GitLab Integration
+#--------------------------------------------------------------
+gitlab_project_name      = "aws-environment-providers/gen-ia-demo"
+gitlab_oidc_provider_url = "git.harmonix.glaciar.org"
+gitlab_ref_type          = "branch"
+gitlab_ref_name          = "main"
+
 default_tags = {
   "caylent:owner"      = "pablo.inchausti@caylent.com"
   "caylent:project"    = "harmonix-mvp"

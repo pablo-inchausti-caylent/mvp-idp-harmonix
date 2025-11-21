@@ -80,3 +80,16 @@ output "generated_password" {
   value       = module.harmnoix_stack.generated_password
   sensitive   = true
 }
+
+#------------------------------------------------------------
+# OIDC IAM Role Outputs
+#------------------------------------------------------------
+output "oidc_role_arn" {
+  description = "ARN of the OIDC IAM role for GitLab integration"
+  value       = module.harmnoix_stack.oidc_role_arn
+}
+
+output "oidc_role_name" {
+  description = "Name of the OIDC IAM role"
+  value       = module.harmnoix_stack.oidc_role_name
+}

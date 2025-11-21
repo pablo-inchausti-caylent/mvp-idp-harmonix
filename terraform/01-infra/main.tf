@@ -45,6 +45,21 @@ module "budgets" {
   tags = local.tags
 }
 
+#--------------------------------------------------------------
+# IAM :: OIDC ROLE
+#--------------------------------------------------------------
+module "oidc_iam_role" {
+  source = "./modules/iam"
+
+  name              = replace(var.name, "-", "_")
+  project_name      = var.gitlab_project_name
+  oidc_provider_url = var.gitlab_oidc_provider_url
+  ref_type          = var.gitlab_ref_type
+  ref_name          = var.gitlab_ref_name
+
+  tags = local.tags
+}
+
 
 output "generated_password" {
   description = "The generated random password."
@@ -100,6 +115,16 @@ output "rds_start_eventbridge_rule_arn" {
 output "rds_stop_eventbridge_rule_arn" {
   description = "ARN of the RDS stop EventBridge schedule rule (10 PM)"
   value       = module.harmonix_lambda.rds_stop_rule_arn
+}
+
+output "oidc_role_arn" {
+  description = "ARN of the OIDC IAM role for GitLab integration"
+  value       = module.oidc_iam_role.oidc_role_arn
+}
+
+output "oidc_role_name" {
+  description = "Name of the OIDC IAM role"
+  value       = module.oidc_iam_role.oidc_role_name
 }
 
 

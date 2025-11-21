@@ -28,3 +28,30 @@ variable "budget_notification_emails" {
   type        = list(string)
   default     = []
 }
+
+#--------------------------------------------------------------
+# OIDC Configuration
+#--------------------------------------------------------------
+variable "gitlab_project_name" {
+  description = "GitLab project path for OIDC integration (e.g., 'aws-environment-providers/gen-ia-demo')"
+  type        = string
+  default     = "aws-environment-providers/gen-ia-demo"
+}
+
+variable "gitlab_oidc_provider_url" {
+  description = "GitLab OIDC provider URL"
+  type        = string
+  default     = "git.harmonix.glaciar.org"
+}
+
+variable "gitlab_ref_type" {
+  description = "Git reference type for OIDC (branch, tag)"
+  type        = string
+  default     = "branch"
+}
+
+variable "gitlab_ref_name" {
+  description = "Git reference name for OIDC (e.g., 'main', 'develop')"
+  type        = string
+  default     = "main"
+}
