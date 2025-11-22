@@ -170,7 +170,7 @@ export class NetworkConstruct extends Construct {
       });
 
         // Create VPC Endpoints to access the network
-
+    // Gateway endpoints (FREE)
     vpc.addGatewayEndpoint("dynamoDBEndpoint", {
       service: ec2.GatewayVpcEndpointAwsService.DYNAMODB,
     });
@@ -179,38 +179,8 @@ export class NetworkConstruct extends Construct {
       service: ec2.GatewayVpcEndpointAwsService.S3,
     });
 
-    vpc.addInterfaceEndpoint("RDSEndpoint", {
-      service: ec2.InterfaceVpcEndpointAwsService.RDS,
-    });
-
-    vpc.addInterfaceEndpoint("ELBEndpoint", {
-      service: ec2.InterfaceVpcEndpointAwsService.ELASTIC_LOAD_BALANCING,
-    });
-
-    vpc.addInterfaceEndpoint("LambdaEndpoint", {
-      service: ec2.InterfaceVpcEndpointAwsService.LAMBDA,
-    });
-
-    vpc.addInterfaceEndpoint("CloudWatchEndpoint", {
-      service: ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH,
-    });
-
-    vpc.addInterfaceEndpoint("APIGatewayEndpoint", {
-      service: ec2.InterfaceVpcEndpointAwsService.APIGATEWAY,
-    });
-
-    vpc.addInterfaceEndpoint("SNSEndpoint", {
-      service: ec2.InterfaceVpcEndpointAwsService.SNS,
-    });
-
-    vpc.addInterfaceEndpoint("SQSEndpoint", {
-      service: ec2.InterfaceVpcEndpointAwsService.SQS,
-    });
-
-    vpc.addInterfaceEndpoint("KMSEndpoint", {
-      service: ec2.InterfaceVpcEndpointAwsService.KMS,
-    });
-
+    // Interface endpoints (PAID) - Only include what's necessary for ECS/Backstage
+    // ECR endpoints required for ECS to pull container images
     vpc.addInterfaceEndpoint("ECREndpoint", {
       service: ec2.InterfaceVpcEndpointAwsService.ECR,
     });
@@ -218,6 +188,20 @@ export class NetworkConstruct extends Construct {
     vpc.addInterfaceEndpoint("ECRDockerEndpoint", {
       service: ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER,
     });
+
+    // KMS endpoint required for encryption/decryption operations
+    vpc.addInterfaceEndpoint("KMSEndpoint", {
+      service: ec2.InterfaceVpcEndpointAwsService.KMS,
+    });
+
+    // Removed unnecessary endpoints to reduce costs:
+    // - RDS: RDS is already within VPC, doesn't need endpoint
+    // - ELB: Application Load Balancer is public-facing
+    // - Lambda: Lambda functions invoked via CloudWatch Events, not privately
+    // - CloudWatch/Monitoring: Not required for basic operations
+    // - API Gateway: No private API Gateway usage
+    // - SNS: Not used for private communications
+    // - SQS: No SQS queues in use
 
     }
 
