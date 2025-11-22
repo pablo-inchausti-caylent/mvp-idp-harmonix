@@ -1,10 +1,12 @@
 ##
-# Start/Stop EC2 instances and RDS databases on schedule
-# - Stops EC2 instances at 4 AM (cost savings)
-# - Starts RDS at 9 AM, Stops RDS at 10 PM (13 hrs/day)
+# Start/Stop EC2 instances on schedule
+# - Stops EC2 instances at 3 AM (cost savings)
 #
 # Event parameter: {"action": "stop"} or {"action": "start"}
 # Default action: "stop" (backwards compatible)
+#
+# NOTE: RDS and Harmonix platform services are now handled by
+#       a separate Lambda function (harmonix-platform-scheduler)
 #
 import json
 import boto3
@@ -34,28 +36,7 @@ def get_ec2_instances(region, state_filter):
         return []
 
 
-def get_rds_instances(region, state_filter):
-    """Get RDS instances by state"""
-    try:
-        rds_client = boto3.client('rds', region_name=region)
-        response = rds_client.describe_db_instances()
-
-        db_instances = []
-
-        for db in response['DBInstances']:
-            db_id = db['DBInstanceIdentifier']
-            db_status = db['DBInstanceStatus']
-
-            print(f"Region: {region:10} - RDS Instance [{db_id}, {db_status}]")
-
-            if db_status in state_filter:
-                db_instances.append(db_id)
-
-        return db_instances
-
-    except Exception as exception:
-        print(f"Error in Region {region} get_rds_instances: {exception}")
-        return []
+# RDS functions removed - now handled by harmonix-platform-scheduler Lambda
 
 
 def stop_ec2_instances(region):
@@ -96,85 +77,34 @@ def start_ec2_instances(region):
         return 0
 
 
-def stop_rds_instances(region):
-    """Stop all available RDS instances"""
-    try:
-        rds_client = boto3.client('rds', region_name=region)
-        db_instances = get_rds_instances(region, ['available'])
-
-        stopped_count = 0
-        for db_id in db_instances:
-            try:
-                rds_client.stop_db_instance(DBInstanceIdentifier=db_id)
-                print(f"Region {region} ::: Stopped RDS instance {db_id}")
-                stopped_count += 1
-            except Exception as e:
-                print(f"Error stopping RDS {db_id}: {e}")
-
-        if stopped_count == 0:
-            print(f"Region {region} ::: No RDS instances to stop")
-
-        return stopped_count
-
-    except Exception as exception:
-        print(f"Error stopping RDS in region {region}: {exception}")
-        return 0
-
-
-def start_rds_instances(region):
-    """Start all stopped RDS instances"""
-    try:
-        rds_client = boto3.client('rds', region_name=region)
-        db_instances = get_rds_instances(region, ['stopped'])
-
-        started_count = 0
-        for db_id in db_instances:
-            try:
-                rds_client.start_db_instance(DBInstanceIdentifier=db_id)
-                print(f"Region {region} ::: Started RDS instance {db_id}")
-                started_count += 1
-            except Exception as e:
-                print(f"Error starting RDS {db_id}: {e}")
-
-        if started_count == 0:
-            print(f"Region {region} ::: No RDS instances to start")
-
-        return started_count
-
-    except Exception as exception:
-        print(f"Error starting RDS in region {region}: {exception}")
-        return 0
 
 
 def lambda_handler(event, context):
     """
-    Main handler - supports start/stop actions
+    Main handler - supports start/stop actions for EC2 instances only
     Event format: {"action": "stop"} or {"action": "start"}
     """
     try:
         # Get action from event, default to "stop" for backwards compatibility
         action = event.get('action', 'stop').lower()
 
-        print(f"Lambda invoked with action: {action}")
+        print(f"EC2 Scheduler Lambda invoked with action: {action}")
+        print("NOTE: RDS and Harmonix platform are handled by harmonix-platform-scheduler")
 
         regions = ['us-east-1', 'us-east-2', 'us-west-2']
 
         total_ec2 = 0
-        total_rds = 0
 
         for region in regions:
             print(f"\n--- Processing Region: {region} ---")
 
             if action == 'stop':
-                # Stop EC2 instances (4 AM schedule - cost savings)
+                # Stop EC2 instances (3 AM schedule - cost savings)
                 total_ec2 += stop_ec2_instances(region)
-                # Stop RDS instances (10 PM schedule - cost savings)
-                total_rds += stop_rds_instances(region)
 
             elif action == 'start':
-                # Start RDS instances (9 AM schedule)
-                total_rds += start_rds_instances(region)
-                # Note: EC2 instances stay stopped (no auto-start)
+                # Start EC2 instances (if needed)
+                total_ec2 += start_ec2_instances(region)
 
             else:
                 return {
@@ -183,7 +113,7 @@ def lambda_handler(event, context):
                 }
 
         code = 200
-        response = f"Action '{action}' completed: {total_ec2} EC2, {total_rds} RDS instances processed"
+        response = f"Action '{action}' completed: {total_ec2} EC2 instances processed"
         print(f"\n{response}")
 
     except Exception as exception:

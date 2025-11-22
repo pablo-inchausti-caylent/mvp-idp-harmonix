@@ -103,18 +103,29 @@ output "resource_group_name" {
 }
 
 output "ec2_stop_eventbridge_rule_arn" {
-  description = "ARN of the EC2 stop EventBridge schedule rule (4 AM)"
+  description = "ARN of the EC2 stop EventBridge schedule rule (3 AM GMT-3)"
   value       = module.harmonix_lambda.ec2_stop_rule_arn
 }
 
-output "rds_start_eventbridge_rule_arn" {
-  description = "ARN of the RDS start EventBridge schedule rule (9 AM)"
-  value       = module.harmonix_lambda.rds_start_rule_arn
+# Harmonix Platform Scheduler Outputs
+output "harmonix_platform_scheduler_arn" {
+  description = "ARN of the Harmonix Platform Scheduler Lambda function"
+  value       = module.harmonix_lambda.harmonix_platform_scheduler_arn
 }
 
-output "rds_stop_eventbridge_rule_arn" {
-  description = "ARN of the RDS stop EventBridge schedule rule (10 PM)"
-  value       = module.harmonix_lambda.rds_stop_rule_arn
+output "harmonix_platform_scheduler_name" {
+  description = "Name of the Harmonix Platform Scheduler Lambda function"
+  value       = module.harmonix_lambda.harmonix_platform_scheduler_name
+}
+
+output "harmonix_stop_eventbridge_rule_arn" {
+  description = "ARN of the Harmonix platform stop EventBridge schedule rule (3:15 AM GMT-3)"
+  value       = module.harmonix_lambda.harmonix_stop_rule_arn
+}
+
+output "harmonix_start_eventbridge_rule_arn" {
+  description = "ARN of the Harmonix platform start EventBridge schedule rule (9:00 AM GMT-3)"
+  value       = module.harmonix_lambda.harmonix_start_rule_arn
 }
 
 output "oidc_role_arn" {

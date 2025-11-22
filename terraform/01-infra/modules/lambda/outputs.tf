@@ -18,12 +18,23 @@ output "ec2_stop_rule_arn" {
   value       = aws_cloudwatch_event_rule.ec2_stop_schedule.arn
 }
 
-output "rds_start_rule_arn" {
-  description = "The ARN of the RDS start EventBridge rule"
-  value       = aws_cloudwatch_event_rule.rds_start_schedule.arn
+# Harmonix Platform Scheduler Outputs
+output "harmonix_platform_scheduler_arn" {
+  description = "The ARN of the Harmonix Platform Scheduler Lambda function"
+  value       = module.harmonix_platform_scheduler.lambda_function_arn
 }
 
-output "rds_stop_rule_arn" {
-  description = "The ARN of the RDS stop EventBridge rule"
-  value       = aws_cloudwatch_event_rule.rds_stop_schedule.arn
+output "harmonix_platform_scheduler_name" {
+  description = "The name of the Harmonix Platform Scheduler Lambda function"
+  value       = module.harmonix_platform_scheduler.lambda_function_name
+}
+
+output "harmonix_stop_rule_arn" {
+  description = "The ARN of the Harmonix platform stop EventBridge rule"
+  value       = aws_cloudwatch_event_rule.harmonix_stop_schedule.arn
+}
+
+output "harmonix_start_rule_arn" {
+  description = "The ARN of the Harmonix platform start EventBridge rule"
+  value       = aws_cloudwatch_event_rule.harmonix_start_schedule.arn
 }
